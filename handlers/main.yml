@@ -1,0 +1,6 @@
+---
+# handlers file for ansible-role-raycast-host-editor
+
+- name: Notify scripts created
+  ansible.builtin.debug:
+    msg: "Raycast scripts have been successfully created in {{ home }}{{ raycast_scripts_path }}"

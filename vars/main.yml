@@ -1,0 +1,11 @@
+---
+# vars file for ansible-role-raycast-host-editor
+
+# These variables are for internal use and shouldn't be overridden directly
+
+# Temporary directory settings
+temp_dir_suffix: "raycast_scripts"
+
+# Archive settings
+archive_filename: "raycast_scripts.tar.gz"
+temp_archive_path: "/tmp/{{ archive_filename }}"

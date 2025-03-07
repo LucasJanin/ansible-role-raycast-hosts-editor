@@ -1,0 +1,17 @@
+#!/bin/bash
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title {{ editor_name }} {{ hostname }}
+# @raycast.mode silent
+#
+# Optional parameters:
+# @raycast.icon 📜
+# @raycast.packageName Raycast Scripts
+#
+# Documentation:
+# @raycast.description Open {{ editor_name }} on {{ hostname }}{% if vspath %} at {{ vspath }}{% endif %}
+#
+# @raycast.author Lucas Janin
+# @raycast.authorURL https://github.com/LucasJanin
+
+{{ editor_path }} --folder-uri "vscode-remote://ssh-remote+{{ ssh_user }}@{{ hostname }}{% if vspath %}{{ vspath }}{% endif %}"

@@ -1,0 +1,152 @@
+# tasks file for ansible-role-raycast-host-editor
+
+# Preparation tasks
+- name: Get remote user's primary group
+  delegate_to: "{{ host }}"
+  ansible.builtin.command: id -gn
+  register: remote_group
+  changed_when: false
+
+- name: Create Raycast scripts directory if it doesn't exist
+  delegate_to: "{{ host }}"
+  ansible.builtin.file:
+    path: "{{ home }}{{ raycast_scripts_path }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ user }}"
+    group: "{{ remote_group.stdout }}"
+
+# Cleanup old scripts
+- name: Find existing {{ editor_name }} Raycast scripts
+  delegate_to: "{{ host }}"
+  ansible.builtin.find:
+    paths: "{{ home }}{{ raycast_scripts_path }}"
+    patterns: "{{ editor_alias }}*.sh"
+  register: existing_scripts
+
+- name: Create list of valid script names
+  delegate_to: "{{ host }}"
+  ansible.builtin.set_fact:
+    valid_script_names: "{{ dev_hostnames | map('regex_replace', '^(.*)$', editor_alias + '\\1.sh') | list }}"
+    scripts_to_remove: []
+
+- name: Identify obsolete scripts
+  delegate_to: "{{ host }}"
+  ansible.builtin.set_fact:
+    scripts_to_remove: "{{ scripts_to_remove + [item.path] }}"
+  loop: "{{ existing_scripts.files }}"
+  when: item.path | basename not in valid_script_names
+  loop_control:
+    label: "{{ item.path | basename }}"
+
+- name: Remove obsolete {{ editor_name }} Raycast scripts
+  delegate_to: "{{ host }}"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ scripts_to_remove }}"
+  when: scripts_to_remove | length > 0
+
+# Create new scripts
+- name: Create temporary directory for scripts
+  ansible.builtin.tempfile:
+    state: directory
+    suffix: "{{ temp_dir_suffix }}"
+  register: temp_scripts_dir
+  delegate_to: localhost
+
+- name: Debug temporary directory for scripts
+  ansible.builtin.debug:
+    var: temp_scripts_dir
+  delegate_to: localhost
+  when: debug
+
+- name: Create Raycast scripts locally
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/raycast-hosts-editor.j2"
+    dest: "{{ temp_scripts_dir.path }}/{{ editor_alias }}-{{ item.0 }}.sh"
+    mode: '0755'
+  loop: "{{ dev_hostnames | zip(dev_alias, dev_vspaths, dev_ansible_ssh_users) | list }}"
+  vars:
+    hostname: "{{ item.0 }}"
+    alias: "{{ item.1 }}"
+    vspath: "{{ item.2 }}"
+    ssh_user: "{{ item.3 }}"
+  delegate_to: localhost
+
+- name: Debug - List created files
+  ansible.builtin.shell: ls -la {{ temp_scripts_dir.path }}
+  register: created_files
+  delegate_to: localhost
+  when: debug
+
+- name: Debug - Show created files
+  ansible.builtin.debug:
+    var: created_files.stdout_lines
+  delegate_to: localhost
+  when: debug
+
+# Deploy scripts to remote host
+- name: Archive scripts locally
+  ansible.builtin.shell:
+    cmd: tar -czvf {{ temp_scripts_dir.path }}.tar.gz -C {{ temp_scripts_dir.path }} .
+  register: archive_result
+  delegate_to: localhost
+
+- name: Copy archive to remote host
+  ansible.builtin.copy:
+    src: "{{ temp_scripts_dir.path }}.tar.gz"
+    dest: "{{ temp_archive_path }}"
+  delegate_to: "{{ host }}"
+
+- name: Ensure Raycast scripts directory exists on remote host
+  delegate_to: "{{ host }}"
+  ansible.builtin.file:
+    path: "{{ home }}{{ raycast_scripts_path }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ user }}"
+    group: "{{ remote_group.stdout }}"
+
+- name: Extract archive and set permissions on remote host
+  delegate_to: "{{ host }}"
+  ansible.builtin.shell:
+    cmd: |
+      # Extract the archive
+      tar -xzvf {{ temp_archive_path }} -C {{ home }}{{ raycast_scripts_path }}
+      
+      # Find and set permissions
+      find {{ home }}{{ raycast_scripts_path }} -name "{{ editor_alias }}-*.sh" -type f -exec chmod 755 {} \;
+      find {{ home }}{{ raycast_scripts_path }} -name "{{ editor_alias }}-*.sh" -type f -exec chown {{ user }}:{{ remote_group.stdout }} {} \;
+      
+      # List the files for debugging
+      ls -la {{ home }}{{ raycast_scripts_path }}
+  args:
+    executable: /bin/bash
+  register: extract_result
+  failed_when: extract_result.rc != 0 and 'No such file or directory' not in extract_result.stderr
+  notify: Notify scripts created
+
+- name: Verify files on remote host
+  delegate_to: "{{ host }}"
+  ansible.builtin.shell:
+    cmd: find {{ home }}{{ raycast_scripts_path }} -name "{{ editor_alias }}-*.sh" -type f
+  register: remote_files
+  changed_when: false
+  failed_when: false
+
+- name: Debug - Show remote files
+  ansible.builtin.debug:
+    var: remote_files.stdout_lines
+  when: debug
+
+# Cleanup
+- name: Clean up temporary files
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop:
+    - { path: "{{ temp_scripts_dir.path }}", host: "localhost" }
+    - { path: "{{ temp_scripts_dir.path }}.tar.gz", host: "localhost" }
+    - { path: "{{ temp_archive_path }}", host: "{{ host }}" }
+  delegate_to: "{{ item.host }}"

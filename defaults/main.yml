@@ -1,0 +1,26 @@
+---
+# defaults file for ansible-role-raycast-host-editor
+
+# Raycast scripts path relative to home directory
+raycast_scripts_path: ".raycast/scripts"
+
+# Editor configuration
+editor_name: "VSCode"
+editor_path: "code"
+editor_alias: "vsc"
+
+# Default empty lists for host information
+# These should be provided when calling the role
+dev_hostnames: []
+dev_alias: []
+dev_vspaths: []
+dev_ansible_ssh_users: []
+
+# Debug
+debug: false
+
+# Temporary directory suffix
+temp_dir_suffix: "raycast_scripts"
+
+# Temporary archive path
+temp_archive_path: "/tmp/raycast_scripts.tar.gz"
