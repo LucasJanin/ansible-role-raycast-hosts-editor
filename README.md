@@ -1,18 +1,24 @@
-Ansible Role: Raycast Hosts Editor
-=========
+# Ansible Role: Raycast Hosts Editor
 
 This Ansible role creates VSCode (or compatible editor like Windsurf) Raycast scripts for remote hosts. It generates scripts that allow you to quickly open VSCode connected to remote hosts via SSH using Raycast on macOS.
 
-Requirements
-------------
+## Features
+
+- Generate a script for each host of the inventory.  
+- It can be configured with a custom editor.  
+- The path of the Raycast script can be configured.  
+
+## Screenshot
+![Raycast Hosts Editor](images/raycast-hosts-editor.png)
+
+## Requirements
 
 - Ansible 2.9 or higher
 - Raycast installed on the target macOS system
 - Visual Studio Code or compatible editor with Remote SSH extension installed
 - SSH access configured between the target macOS system and the remote hosts
 
-Role Variables
---------------
+## Role Variables
 
 ```yaml
 # Required variables
@@ -33,13 +39,11 @@ editor_path: "code"                       # Command to launch the editor
 editor_alias: "vs"                        # Prefix for script filenames
 ```
 
-Dependencies
-------------
+## Dependencies
 
 No dependencies on other roles.
 
-Example Playbook
-----------------
+## Example Playbook
 
 ```yaml
 - name: Create Raycast scripts for remote hosts
@@ -63,8 +67,7 @@ Example Playbook
         home: "{{ management_home }}"
 ```
 
-Testing
--------
+## Testing
 
 The role includes a test playbook and inventory that can be used to verify functionality. To run the tests:
 
@@ -75,8 +78,7 @@ ansible-playbook -i tests/inventory.ini tests/test.yml
 
 The test creates Raycast scripts in a temporary directory (`~/tmp/raycast/scripts`) to avoid modifying your actual Raycast scripts during testing.
 
-Inventory Example
-----------------
+## Inventory Example
 
 Here's an example inventory file format that works with this role:
 
@@ -115,13 +117,11 @@ pre_tasks:
     loop: "{{ dev_hostnames }}"
 ```
 
-License
--------
+## License
 
 MIT
 
-Contributing
-------------
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
@@ -131,8 +131,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-Author Information
-------------------
+## Author Information
 
 - Lucas Janin
 - https://lucasjanin.com
