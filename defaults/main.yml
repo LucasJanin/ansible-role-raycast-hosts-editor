@@ -14,7 +14,7 @@ editor_alias: "vsc"
 dev_hostnames: []
 dev_alias: []
 dev_vspaths: []
-dev_ansible_ssh_users: []
+dev_ansible_users: []
 
 # Debug
 debug: false
