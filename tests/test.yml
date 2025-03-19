@@ -9,34 +9,12 @@
     home: "/home/{{ lookup('env', 'USER') }}/"
     debug: true
     
-    # Use actual hosts from inventory
-    dev_hostnames: "{{ groups['all'] | difference(['localhost']) }}"
-    dev_alias: []
-    dev_vspaths: []
-    dev_ansible_ssh_users: []
-    
     # Editor configuration
     editor_name: "VSCode"
     editor_path: "code"
     editor_alias: "vs"
     raycast_scripts_path: "tmp/raycast/scripts"  # Using tmp for testing
     
-  pre_tasks:
-    - name: Set aliases from inventory
-      set_fact:
-        dev_alias: "{{ dev_alias + [hostvars[item].alias | default(item)] }}"
-      loop: "{{ dev_hostnames }}"
-      
-    - name: Set vspaths from inventory
-      set_fact:
-        dev_vspaths: "{{ dev_vspaths + [hostvars[item].vspath | default('/home/' + hostvars[item].ansible_user + '/')] }}"
-      loop: "{{ dev_hostnames }}"
-      
-    - name: Set SSH users from inventory
-      set_fact:
-        dev_ansible_ssh_users: "{{ dev_ansible_ssh_users + [hostvars[item].ansible_user | default('ansible')] }}"
-      loop: "{{ dev_hostnames }}"
-  
   tasks:
     # Include the role
     - name: Include Raycast Hosts Editor role

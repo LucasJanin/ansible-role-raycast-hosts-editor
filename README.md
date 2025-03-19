@@ -26,12 +26,6 @@ user: "username"                          # The username on the target macOS sys
 host: "hostname"                          # The hostname of the target macOS system
 home: "/Users/username/"                  # The home directory on the target macOS system
 
-# Lists of host information
-dev_hostnames: []                         # List of remote hostnames
-dev_alias: []                             # List of aliases for the remote hosts
-dev_vspaths: []                           # List of paths to open in editor for each host
-dev_ansible_ssh_users: []                 # List of SSH users for connecting to each host
-
 # Optional variables with defaults
 raycast_scripts_path: ".raycast/scripts"  # Path to Raycast scripts directory relative to home
 editor_name: "VSCode"                     # Name of the editor to use in script titles
@@ -58,10 +52,6 @@ No dependencies on other roles.
       include_role:
         name: ansible-role-raycast-hosts-editor
       vars:
-        dev_hostnames: "{{ dev_hostnames }}"
-        dev_alias: "{{ dev_alias }}"
-        dev_vspaths: "{{ dev_vspaths }}"
-        dev_ansible_ssh_users: "{{ dev_ansible_ssh_user }}"
         user: "{{ management_user }}"
         host: "{{ management_host }}"
         home: "{{ management_home }}"
@@ -92,30 +82,58 @@ homepage    ansible_host="192.168.1.12"   alias="hp"    vspath="/opt/homepage/co
 ansible_user="ansible"
 ```
 
-When using this inventory format, you can extract the values dynamically in your playbook:
+The role will automatically use the host variables from your inventory:
+
+- `ansible_host`: The IP address or hostname of the remote host
+- `ansible_user`: The SSH username to connect to the remote host
+- `alias`: A short alias for the host (used in script names)
+- `vspath`: The path to open in VSCode on the remote host
+
+## New Method
+
+Starting with version 2.0, this role now directly uses Ansible's host variables instead of requiring separate lists. This simplifies configuration and makes the role more maintainable.
+
+### Template Changes
+
+The template now directly accesses host variables:
+
+```bash
+#!/bin/bash
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title {{ editor_name }} {{ hostname }}
+# @raycast.mode silent
+#
+# Optional parameters:
+# @raycast.icon 📜
+# @raycast.packageName Raycast Scripts
+#
+# Documentation:
+# @raycast.description Open {{ editor_name }} on {{ hostname }}{% if hostvars[hostname].vspath %} at {{ hostvars[hostname].vspath }}{% endif %}
+#
+# @raycast.author Lucas Janin
+# @raycast.authorURL https://github.com/LucasJanin
+
+{{ editor_path }} --folder-uri "vscode-remote://ssh-remote+{{ hostvars[hostname].ansible_user | default('ansible') }}@{{ hostname }}{% if hostvars[hostname].vspath %}{{ hostvars[hostname].vspath }}{% endif %}"
+```
+
+### Task Changes
+
+The task that creates the scripts has been simplified:
 
 ```yaml
-dev_hostnames: "{{ groups['all'] | difference(['localhost']) }}"
-dev_alias: []  # Will be populated from inventory
-dev_vspaths: []  # Will be populated from inventory
-dev_ansible_ssh_users: []  # Will be populated from inventory
-
-pre_tasks:
-  - name: Set aliases from inventory
-    set_fact:
-      dev_alias: "{{ dev_alias + [hostvars[item].alias | default(item)] }}"
-    loop: "{{ dev_hostnames }}"
-    
-  - name: Set vspaths from inventory
-    set_fact:
-      dev_vspaths: "{{ dev_vspaths + [hostvars[item].vspath | default('/home/' + hostvars[item].ansible_user + '/')] }}"
-    loop: "{{ dev_hostnames }}"
-    
-  - name: Set SSH users from inventory
-    set_fact:
-      dev_ansible_ssh_users: "{{ dev_ansible_ssh_users + [hostvars[item].ansible_user | default('ansible')] }}"
-    loop: "{{ dev_hostnames }}"
+- name: Create Raycast scripts locally
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/raycast-hosts-editor.j2"
+    dest: "{{ temp_scripts_dir.path }}/{{ editor_alias }}-{{ item }}.sh"
+    mode: '0755'
+  loop: "{{ ansible_play_hosts_all }}"
+  vars:
+    hostname: "{{ item }}"
+  delegate_to: localhost
 ```
+
+This approach eliminates the need for pre-tasks that extract values from the inventory into separate lists.
 
 ## License
 
@@ -123,16 +141,17 @@ MIT
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch (`git checkout -b feature/my-new-feature`)
+3. Commit your changes (`git commit -am 'Add some feature'`)
+4. Push to the branch (`git push origin feature/my-new-feature`)
+5. Create a new Pull Request
 
 ## Author Information
 
-- Lucas Janin
-- https://lucasjanin.com
-- https://mastodon.social/@lucas3d
+Lucas Janin
+- Mastodon: [https://mastodon.social/@lucas3d](https://mastodon.social/@lucas3d)
+- Website: [https://www.lucasjanin.com](https://www.lucasjanin.com)
+- GitHub: [github.com/lucasjanin](https://github.com/lucasjanin)
+- LinkedIn: [linkedin.com/in/lucasjanin](https://linkedin.com/in/lucasjanin)
+

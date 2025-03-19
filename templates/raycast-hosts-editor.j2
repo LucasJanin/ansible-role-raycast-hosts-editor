@@ -9,9 +9,9 @@
 # @raycast.packageName Raycast Scripts
 #
 # Documentation:
-# @raycast.description Open {{ editor_name }} on {{ hostname }}{% if vspath %} at {{ vspath }}{% endif %}
+# @raycast.description Open {{ editor_name }} on {{ hostname }}{% if hostvars[hostname].vspath %} at {{ hostvars[hostname].vspath }}{% endif %}
 #
 # @raycast.author Lucas Janin
 # @raycast.authorURL https://github.com/LucasJanin
 
-{{ editor_path }} --folder-uri "vscode-remote://ssh-remote+{{ ssh_user }}@{{ hostname }}{% if vspath %}{{ vspath }}{% endif %}"
+{{ editor_path }} --folder-uri "vscode-remote://ssh-remote+{{ hostvars[hostname].ansible_user }}@{{ hostname }}{% if hostvars[hostname].vspath %}{{ hostvars[hostname].vspath }}{% endif %}"

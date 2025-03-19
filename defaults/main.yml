@@ -9,13 +9,6 @@ editor_name: "VSCode"
 editor_path: "code"
 editor_alias: "vsc"
 
-# Default empty lists for host information
-# These should be provided when calling the role
-dev_hostnames: []
-dev_alias: []
-dev_vspaths: []
-dev_ansible_users: []
-
 # Debug
 debug: false
 

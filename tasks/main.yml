@@ -27,7 +27,7 @@
 - name: Create list of valid script names
   delegate_to: "{{ host }}"
   ansible.builtin.set_fact:
-    valid_script_names: "{{ dev_hostnames | map('regex_replace', '^(.*)$', editor_alias + '\\1.sh') | list }}"
+    valid_script_names: "{{ ansible_play_hosts_all | map('regex_replace', '^(.*)$', editor_alias + '\\\\1.sh') | list }}"
     scripts_to_remove: []
 
 - name: Identify obsolete scripts
@@ -64,14 +64,11 @@
 - name: Create Raycast scripts locally
   ansible.builtin.template:
     src: "{{ role_path }}/templates/raycast-hosts-editor.j2"
-    dest: "{{ temp_scripts_dir.path }}/{{ editor_alias }}-{{ item.0 }}.sh"
+    dest: "{{ temp_scripts_dir.path }}/{{ editor_alias }}-{{ item }}.sh"
     mode: '0755'
-  loop: "{{ dev_hostnames | zip(dev_alias, dev_vspaths, dev_ansible_users) | list }}"
+  loop: "{{ ansible_play_hosts_all }}"
   vars:
-    hostname: "{{ item.0 }}"
-    alias: "{{ item.1 }}"
-    vspath: "{{ item.2 }}"
-    ssh_user: "{{ item.3 }}"
+    hostname: "{{ item }}"
   delegate_to: localhost
 
 - name: Debug - List created files
