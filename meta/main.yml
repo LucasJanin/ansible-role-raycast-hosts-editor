@@ -1,13 +1,18 @@
+---
 galaxy_info:
+  role_name: raycast_hosts_editor
+  namespace: lucasjanin
   author: Lucas Janin
   description: Creates Editor Raycast scripts for remote hosts
-  company: 
-
+  company: lucasjanin.com
   issue_tracker_url: https://github.com/LucasJanin/ansible-role-raycast-hosts-editor/issues
-
   license: MIT
+  min_ansible_version: "2.12"
 
-  min_ansible_version: 2.9
+  platforms:
+    - name: "macOS"
+      versions:
+        - all
 
   galaxy_tags:
     - raycast
@@ -18,4 +23,3 @@ galaxy_info:
     - ssh
 
 dependencies: []
-

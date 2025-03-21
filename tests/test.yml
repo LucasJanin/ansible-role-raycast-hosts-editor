@@ -8,15 +8,15 @@
     host: "localhost"  # Change this to your Mac hostname if needed
     home: "/home/{{ lookup('env', 'USER') }}/"
     debug: true
-    
+
     # Editor configuration
     editor_name: "VSCode"
     editor_path: "code"
     editor_alias: "vs"
     raycast_scripts_path: "tmp/raycast/scripts"  # Using tmp for testing
-    
+
   tasks:
     # Include the role
     - name: Include Raycast Hosts Editor role
-      include_role:
-        name: ../..
+      ansible.builtin.include_role:
+        name: ansible-role-raycast-hosts-editor
