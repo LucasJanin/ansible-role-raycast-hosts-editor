@@ -1,7 +1,6 @@
 ---
 galaxy_info:
   role_name: raycast_hosts_editor
-  namespace: lucasjanin
   author: Lucas Janin
   description: Creates Editor Raycast scripts for remote hosts
   company: lucasjanin.com
